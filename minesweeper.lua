@@ -25,19 +25,32 @@ end
 
 function get_board_size()
 --IO needed to get board size
-	print('How large do you want your board')
-	size = io.read("*number")
-
+	validSize = false
+	while not validSize do
+		print("Enter the board size (5 .. 15): ")
+		size = io.read("*number")
+		if size >= 5 and size <= 15 then
+			validSize = true
+		else
+			print("Invalid board size.")
+		end
+	end
 	return size
 end
 
 
 function get_percent_mine()
 --IO needed in this to get percent
-	print('Set the percent of mines on the board')
-	
-	percent = io.read("*number")
-	
+	validPercent = false
+	while not validPercent do
+		print("Enter the percentage of mines on the board (10 .. 70): ")
+		percent = io.read("*number")
+		if percent >= 10 and percent <= 70 then
+			validPercent = true
+		else
+			print("Invalid percentage.")
+		end
+	end
 	return percent
 end
 
@@ -51,7 +64,7 @@ function displayMenu()
 	print("   Quit: q/Q\n")
 end
 
-function nbrVisibleCells(size, board)
+function nbrVisibleCells(size)
     
     count = 0;
 
@@ -67,7 +80,7 @@ function nbrVisibleCells(size, board)
 
 end
 
-function setImmediateNeighborCellsVisible(row,col,size,board)
+function setImmediateNeighborCellsVisible(row,col,size)
 
 
     if row ~= 0 and col ~= size-1 then
@@ -110,7 +123,7 @@ function valid(row,col,size)
 
 end
 
-function setAllNeighborCellsVisible(row,col,size,board)
+function setAllNeighborCellsVisible(row,col,size)
 
     if board[row][col].mine == 0 then
         for i=-1,1 do
@@ -119,20 +132,20 @@ function setAllNeighborCellsVisible(row,col,size,board)
                     board[row][col].visible = true;
                 else
                     if valid(row+1,col+j,size) and not board[row+i][col+j].visible  then
-                        setAllNeighborCellsVisible(row+i,col+j,size,board)
+                        setAllNeighborCellsVisible(row+i,col+j,size)
                     end
                 end
 
             end
         end
-        setImmediateNeighborCellsVisible(row,col,size,board)
+        setImmediateNeighborCellsVisible(row,col,size)
     end
 
 end
 
 
 --currently assuming 0 index
-function initBoard(size, board)
+function initBoard(size)
 	for i=0,size-1 do
 		for j=0,size-1 do
 			board[i][j] = Cell:create()
@@ -141,7 +154,8 @@ function initBoard(size, board)
      return board
 end
 
-function placeMinesOnBoard(size, board, nbrMines)
+function placeMinesOnBoard(size, nbrMines)
+	math.randomseed( os.time() )
 	for i=0,nbrMines-1 do
 		repeat
 			row = math.random(size) - 1
@@ -151,17 +165,17 @@ function placeMinesOnBoard(size, board, nbrMines)
 	end
 end
 
-function fillInMineCountForNonMineCells(size, board)
+function fillInMineCountForNonMineCells(size)
 	for row=0,size-1 do
 		for col=0,size-1 do
 			if board[row][col].is_mine == false then
-				board[row][col].nbr_mines = getNbrNeighborMines(row, col, size, board)
+				board[row][col].nbr_mines = getNbrNeighborMines(row, col, size)
 			end
 		end 
 	end
 end
 
-function nbrOfMines(size, board)
+function nbrOfMines(size)
 	count = 0
 	for row=0,size-1 do
 		for col=0, size-1 do
@@ -170,11 +184,11 @@ function nbrOfMines(size, board)
 			end
 		end
 	end
-
+	return count
 end
 
-function getNbrNeighborMines(size, board)
-	count=0; rStart=-1; rFinish=1 ; cStart=-1; cFinish=0
+function getNbrNeighborMines(row, col, size)
+	count=0; rStart=-1; rFinish=1 ; cStart=-1; cFinish=1
 	if row == 0 then rStart = 0 end
 	if col == 0 then cStart = 0 end
 	if row == size-1 then rFinish = 0 end
@@ -190,7 +204,7 @@ function getNbrNeighborMines(size, board)
 	return count
 end
 
-function displayBoard(size, board, displayMines)
+function displayBoard(size, displayMines)
 	str = "\n"
 	--prints top row
 	for a=0,size do
@@ -236,7 +250,7 @@ function displayBoard(size, board, displayMines)
 	print(str)
 end
 
-function selectCell (row, col, size, board)
+function selectCell (row, col, size)
 	board[row][col].visible = true
 	if board[row][col].is_mine then
 		return "LOST"
@@ -244,7 +258,7 @@ function selectCell (row, col, size, board)
 		setAllNeighborCellsVisible(row, col, size, board)
 	end
 
-	if nbrVisibleCells(size, board)+nbrOfMines(size, board) == size*size then
+	if nbrVisibleCells(size)+nbrOfMines(size) == size*size then
 		return "WON"
 	end
 
@@ -264,15 +278,15 @@ function main()
 	for i=0, size-1 do
 		board[i] = {}
 	end
-	initBoard(size,board)
+	initBoard(size)
 
 	nbrMines = size * size * (get_percent_mine()/100)
 
-	placeMinesOnBoard(size, board, nbrMines)
+	placeMinesOnBoard(size, nbrMines)
 
-	fillInMineCountForNonMineCells(size, board)
+	fillInMineCountForNonMineCells(size)
 
-	displayBoard(size, board, displayMines)
+	displayBoard(size, displayMines)
 
 
 	while true do
@@ -292,19 +306,19 @@ function main()
 			until not(row < 1 or row > size or col < 1 or col > size)
 			row = row - 1
 			col = col - 1
-			gameState = selectCell(row, col, size, board)
-			displayBoard(size, board, displayMines)
+			gameState = selectCell(row, col, size)
+			displayBoard(size, displayMines)
 
 		elseif command == "s" or command == "S" then
 			displayMines = true
-			displayBoard(size, board, displayMines)
+			displayBoard(size, displayMines)
 
 		elseif command == "h" or command == "H" then
 			displayMines = false
-			displayBoard(size, board, displayMines)
+			displayBoard(size, displayMines)
 
 		elseif command == "b" or command == "B" then
-			displayBoard(size, board, displayMines)
+			displayBoard(size, displayMines)
 
 		elseif command == "q" or command == "Q" then
 			print("Bye.")
