@@ -70,28 +70,28 @@ end
 function setImmediateNeighborCellsVisible(row,col,size,board)
 
 
-    if row ~= 0 and col ~= size-1
+    if row ~= 0 and col ~= size-1 then
         board[row-1][col+1].visible = true;
     end
-    if col ~= size-1
+    if col ~= size-1 then
         board[row][col+1].visible = true;
     end
-    if row ~= size-1 and col ~= size-1
+    if row ~= size-1 and col ~= size-1 then
         board[row+1][col+1].visible = true;
     end
-    if  row ~= 0
+    if  row ~= 0 then
         board[row-1][col].visible = true;
     end
-    if row ~= size-1
+    if row ~= size-1 then
         board[row-1][col].visible = true;
     end
-    if row ~= 0 and col ~= 0
+    if row ~= 0 and col ~= 0 then
         board[row-1][col-1].visible = true;
     end
-    if col ~= 0
+    if col ~= 0 then
         board[row][col-1].visible = true;
     end
-    if row ~= size-1 and col ~= 0
+    if row ~= size-1 and col ~= 0 then
         board[row+1][col-1].visible = true;
     end
 
@@ -100,9 +100,9 @@ end
 
 function valid(row,col,size)
 
-    if row < 0 or row >=size
+    if row < 0 or row >=size then
         return 0
-    else if col < 0 or col >= size
+    elseif col < 0 or col >= size then
         return 0
     else
         return 1
@@ -113,12 +113,12 @@ end
 function setAllNeighborCellsVisible(row,col,size,board)
 
     if board[row][col].mine == 0 then
-        for i=-1,1
-            for j=-1,1
+        for i=-1,1 do
+            for j=-1,1 do
                 if i == 0 and j == 0 then
                     board[row][col].visible = true;
                 else
-                    if valid(row+1,col+j,size) and ~board[row+i][col+j].visible then
+                    if valid(row+1,col+j,size) and not board[row+i][col+j].visible  then
                         setAllNeighborCellsVisible(row+i,col+j,size,board)
                     end
                 end
@@ -151,13 +151,113 @@ function placeMinesOnBoard(size, board, nbrMines)
 	end
 end
 
+function fillInMineCountForNonMineCells(size, board)
+	for row=0,size-1 do
+		for col=0,size-1 do
+			if board[row][col].is_mine == false then
+				board[row][col].nbr_mines = getNbrNeighborMines(row, col, size, board)
+			end
+		end 
+	end
+end
+
+function nbrOfMines(size, board)
+	count = 0
+	for row=0,size-1 do
+		for col=0, size-1 do
+			if board[row][col].is_mine then
+				count = count + 1
+			end
+		end
+	end
+
+end
+
+function getNbrNeighborMines(size, board)
+	count=0; rStart=-1; rFinish=1 ; cStart=-1; cFinish=0
+	if row == 0 then rStart = 0 end
+	if col == 0 then cStart = 0 end
+	if row == size-1 then rFinish = 0 end
+	if col == size-1 then cFinish = 0 end
+
+	for vert = rStart, rFinish do
+		for horiz = cStart, cFinish do
+			if board[row+vert][col+horiz].is_mine then
+				count = count + 1
+			end
+		end
+	end
+	return count
+end
+
+function displayBoard(size, board, displayMines)
+	str = "\n"
+	--prints top row
+	for a=0,size do
+		if not a == 0 then
+			if a > 9 then
+				str = str .. "\b"
+			end
+			str = str .. " " .. a .. " "
+		else
+			str = str .. "   "
+		end
+	end
+	str = str .. "\n"
+
+	--other rows
+	for row=0,size-1 do
+		if row+1 < 10 then
+			str= str .. " "
+		end
+		str = str .. row + 1 .. " "
+		for col=0,size-1 do
+			if not board[row][col].visible then
+				if not displayMines then
+					str = str .. " ? "
+				else
+					if board[row][col].is_mine then
+						str = str .. " * "
+					else
+						str = str .. " ? "
+					end
+				end
+			else
+				if board[row][col].is_mine then
+					str = str .. " * "
+				else
+					str = str .. " " .. board[row][col].nbr_mines .. " "
+				end
+			end
+		end
+		str = str .. "\n"
+	end
+	str = str .. "\n"
+	print(str)
+end
+
+function selectCell (row, col, size, board)
+	board[row][col].visible = true
+	if board[row][col].is_mine then
+		return "LOST"
+	elseif board[row][col].mines == 0 then
+		setAllNeighborCellsVisible(row, col, size, board)
+	end
+
+	if nbrVisibleCells(size, board)+nbrOfMines(size, board) == size*size then
+		return "WON"
+	end
+
+	return "INPROGRESS"
+end
+
 function main()
 	displayMines = false
 	gameState = "INPROGRESS"
 
 	print("!!!!!WELCOME TO THE MINESWEEPER GAME!!!!!")
 
-	size = get_board_size()	
+	size = get_board_size()
 
 	--2d array
 	board = {}
@@ -168,6 +268,61 @@ function main()
 
 	nbrMines = size * size * (get_percent_mine()/100)
 
+	placeMinesOnBoard(size, board, nbrMines)
+
+	fillInMineCountForNonMineCells(size, board)
+
+	displayBoard(size, board, displayMines)
+
+
+	while true do
+		print("Enter command (m/M for command menu): ")
+		command = io.read("*number")
+		
+		if command == "m" or command == "M" then
+			displayMenu()
+
+		elseif command == "c" or command == "C" then
+			repeat
+				print("Enter row and column of cell: ")
+				row, col = io.read("*number","*number")
+				if row < 1 or row > size or col < 1 or col > size then
+					print("Invalid row or column values. Try again.")
+				end
+			until not(row < 1 or row > size or col < 1 or col > size)
+			row = row - 1
+			col = col - 1
+			gameState = selectCell(row, col, size, board)
+			displayBoard(size, board, displayMines)
+
+		elseif command == "s" or command == "S" then
+			displayMines = true
+			displayBoard(size, board, displayMines)
+
+		elseif command == "h" or command == "H" then
+			displayMines = false
+			displayBoard(size, board, displayMines)
+
+		elseif command == "b" or command == "B" then
+			displayBoard(size, board, displayMines)
+
+		elseif command == "q" or command == "Q" then
+			print("Bye.")
+			return
+
+		else
+			print("Invalid command. Try again.")
+		end
+	
+		if (gameState == "WON") then
+			print("You found all the mines. Congratulations. Bye.")
+			return
+		elseif (gameState == "LOST") then
+			print("Oops. Sorry, you landed on a mine. Bye.")
+			return
+		end
+
+	end
 end
 
 main()
