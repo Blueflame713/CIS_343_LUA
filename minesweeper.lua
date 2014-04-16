@@ -38,7 +38,7 @@ function get_percent_mine()
 	
 	percent = io.read("*number")
 	
-	return percent;
+	return percent
 end
 
 function displayMenu()
@@ -50,6 +50,86 @@ function displayMenu()
 	print("   Display Menu: m/M")
 	print("   Quit: q/Q\n")
 end
+
+function nbrVisibleCells(size, board)
+    
+    count = 0;
+
+    for row=0,size-1 do
+        for col=0,size-1 do
+            if board[row][col].visible then
+                count = count + 1
+            end
+        end
+    end
+
+    return count
+
+end
+
+function setImmediateNeighborCellsVisible(row,col,size,board)
+
+
+    if row ~= 0 and col ~= size-1
+        board[row-1][col+1].visible = true;
+    end
+    if col ~= size-1
+        board[row][col+1].visible = true;
+    end
+    if row ~= size-1 and col ~= size-1
+        board[row+1][col+1].visible = true;
+    end
+    if  row ~= 0
+        board[row-1][col].visible = true;
+    end
+    if row ~= size-1
+        board[row-1][col].visible = true;
+    end
+    if row ~= 0 and col ~= 0
+        board[row-1][col-1].visible = true;
+    end
+    if col ~= 0
+        board[row][col-1].visible = true;
+    end
+    if row ~= size-1 and col ~= 0
+        board[row+1][col-1].visible = true;
+    end
+
+
+end
+
+function valid(row,col,size)
+
+    if row < 0 or row >=size
+        return 0
+    else if col < 0 or col >= size
+        return 0
+    else
+        return 1
+    end
+
+end
+
+function setAllNeighborCellsVisible(row,col,size,board)
+
+    if board[row][col].mine == 0 then
+        for i=-1,1
+            for j=-1,1
+                if i == 0 and j == 0 then
+                    board[row][col].visible = true;
+                else
+                    if valid(row+1,col+j,size) and ~board[row+i][col+j].visible then
+                        setAllNeighborCellsVisible(row+i,col+j,size,board)
+                    end
+                end
+
+            end
+        end
+        setImmediateNeighborCellsVisible(row,col,size,board)
+    end
+
+end
+
 
 --currently assuming 0 index
 function initBoard(size, board)
@@ -77,7 +157,7 @@ function main()
 
 	print("!!!!!WELCOME TO THE MINESWEEPER GAME!!!!!")
 
-	size = get_board_size()
+	size = get_board_size()	
 
 	--2d array
 	board = {}
