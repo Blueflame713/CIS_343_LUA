@@ -80,58 +80,58 @@ function nbrVisibleCells(size)
 
 end
 
-function setImmediateNeighborCellsVisible(row,col,size)
-
-
-    if row ~= 0 and col ~= size-1 then
-        board[row-1][col+1].visible = true;
-    end
-    if col ~= size-1 then
-        board[row][col+1].visible = true;
-    end
-    if row ~= size-1 and col ~= size-1 then
-        board[row+1][col+1].visible = true;
-    end
-    if  row ~= 0 then
-        board[row-1][col].visible = true;
-    end
-    if row ~= size-1 then
-        board[row-1][col].visible = true;
-    end
-    if row ~= 0 and col ~= 0 then
-        board[row-1][col-1].visible = true;
-    end
-    if col ~= 0 then
-        board[row][col-1].visible = true;
-    end
-    if row ~= size-1 and col ~= 0 then
-        board[row+1][col-1].visible = true;
-    end
-
-
-end
-
 function valid(row,col,size)
 
     if row < 0 or row >=size then
-        return 0
+        return false
     elseif col < 0 or col >= size then
-        return 0
+        return false
     else
-        return 1
+        return true
     end
 
 end
 
+function setImmediateNeighborCellsVisible(row,col,size)
+
+
+    if valid(row-1,col+1,size) then
+        board[row-1][col+1].visible = true;
+    end
+    if valid(row,col+1,size) then
+        board[row][col+1].visible = true;
+    end
+    if valid(row+1,col+1,size) then
+        board[row+1][col+1].visible = true;
+    end
+    if valid(row-1,col,size) then
+        board[row-1][col].visible = true;
+    end
+    if valid(row+1,col,size) then
+        board[row+1][col].visible = true;
+    end
+    if valid(row-1,col-1,size) then
+        board[row-1][col-1].visible = true;
+    end
+    if valid(row,col-1,size) then
+        board[row][col-1].visible = true;
+    end
+    if valid(row+1,col-1,size) then
+        board[row+1][col-1].visible = true;
+    end
+
+end
+
+
 function setAllNeighborCellsVisible(row,col,size)
-	print("in all neighbor")
-    if board[row][col].mine == 0 then
-        for i=-1,1 do
+    if board[row][col].nbr_mines == 0 then
+       print(board[row][col])
+				 for i=-1,1 do
            for j=-1,1 do
                 if i == 0 and j == 0 then
                     board[row][col].visible = true;
                 else
-                    if valid(row+1,col+j,size) and not board[row+i][col+j].visible  then
+                    if valid(row+i,col+j,size) and board[row+i][col+j].visible== false  then
                         setAllNeighborCellsVisible(row+i,col+j,size)
                     end
                 end
@@ -140,7 +140,7 @@ function setAllNeighborCellsVisible(row,col,size)
         end
         setImmediateNeighborCellsVisible(row,col,size)
     end
-
+	
 end
 
 
@@ -251,11 +251,11 @@ function displayBoard(size, displayMines)
 end
 
 function selectCell (row, col, size)
---	board[row][col].visible = true
+	board[row][col].visible = true
 	if board[row][col].is_mine then
 		return "LOST"
-	elseif board[row][col].mines == 0 then
-		setAllNeighborCellsVisible(row, col, size, board)
+	elseif board[row][col].nbr_mines == 0 then
+		setAllNeighborCellsVisible(row, col, size)
 	end
 
 	if nbrVisibleCells(size)+nbrOfMines(size) == size*size then
