@@ -124,10 +124,10 @@ function valid(row,col,size)
 end
 
 function setAllNeighborCellsVisible(row,col,size)
-
+	print("in all neighbor")
     if board[row][col].mine == 0 then
         for i=-1,1 do
-            for j=-1,1 do
+           for j=-1,1 do
                 if i == 0 and j == 0 then
                     board[row][col].visible = true;
                 else
@@ -251,7 +251,7 @@ function displayBoard(size, displayMines)
 end
 
 function selectCell (row, col, size)
-	board[row][col].visible = true
+--	board[row][col].visible = true
 	if board[row][col].is_mine then
 		return "LOST"
 	elseif board[row][col].mines == 0 then
@@ -291,7 +291,7 @@ function main()
 
 	while true do
 		print("Enter command (m/M for command menu): ")
-		command = io.read("*number")
+		command = io.read("*line")
 		
 		if command == "m" or command == "M" then
 			displayMenu()
